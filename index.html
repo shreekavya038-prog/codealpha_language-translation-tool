@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Language Translation Tool</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    margin: 0;
+    padding: 20px;
+}
+.container {
+    max-width: 900px;
+    margin: auto;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    overflow: hidden;
+}
+.header {
+    color: white;
+    text-align: center;
+    padding: 25px;
+    background: linear-gradient(135deg, #4f46e5, #06b6d4);
+    font-size: 32px;
+    font-weight: bold;
+}
+.content {
+    padding: 25px;
+}
+.row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+textarea {
+    width: 100%;
+    min-height: 220px;
+    padding: 15px;
+    border-radius: 12px;
+    border: 2px solid #ddd;
+    font-size: 16px;
+    resize: vertical;
+    box-sizing: border-box;
+}
+select, button {
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+}
+button {
+    background: #4f46e5;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+}
+button:hover { opacity: 0.95; }
+.controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+.tools {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 10px;
+}
+@media (max-width: 768px) {
+    .row, .controls, .tools {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+</head>
+<body>
+<div class="container">
+    <div class="header">🌍 Language Translation Tool</div>
+    <div class="content">
+        <div class="controls">
+            <select id="source">
+                <option value="auto">Auto Detect</option>
+                {% for name, code in languages.items() %}
+                <option value="{{ code }}">{{ name }}</option>
+                {% endfor %}
+            </select>
+            <select id="target">
+                {% for name, code in languages.items() %}
+                <option value="{{ code }}" {% if code == 'kn' %}selected{% endif %}>{{ name }}</option>
+                {% endfor %}
+            </select>
+            <button onclick="translateText()">Translate</button>
+        </div>
+
+        <div class="row">
+            <textarea id="inputText" placeholder="Enter text here..."></textarea>
+            <textarea id="outputText" placeholder="Translation appears here..." readonly></textarea>
+        </div>
+
+        <div class="tools">
+            <button onclick="copyText()">📋 Copy Translation</button>
+            <button onclick="speakText()">🔊 Speak Translation</button>
+        </div>
+    </div>
+</div>
+
+<script>
+async function translateText() {
+    const text = document.getElementById('inputText').value.trim();
+    const source = document.getElementById('source').value;
+    const target = document.getElementById('target').value;
+
+    if (!text) {
+        alert('Please enter some text.');
+        return;
+    }
+
+    const res = await fetch('/translate', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({text, source, target})
+    });
+
+    const data = await res.json();
+    document.getElementById('outputText').value = data.translated;
+}
+
+function copyText() {
+    const output = document.getElementById('outputText');
+    output.select();
+    document.execCommand('copy');
+    alert('Translation copied!');
+}
+
+function speakText() {
+    const text = document.getElementById('outputText').value;
+    if (!text) return;
+    const utterance = new SpeechSynthesisUtterance(text);
+    speechSynthesis.speak(utterance);
+}
+</script>
+</body>
+</html>
